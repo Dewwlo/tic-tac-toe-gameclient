@@ -1,0 +1,79 @@
+﻿<Window x:Class="Övningstenta.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Övningstenta"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="407.932" Width="464.345">
+    <Grid>
+        <Menu Height="20" VerticalAlignment="Top">
+            <MenuItem Header="Game _menu">
+                <MenuItem Header="_New Game" InputGestureText="Ctrl+N" Click="NewGame_OnClick"/>
+                <MenuItem Header="_Close Game" Click="CloseGame_OnClick"/>
+            </MenuItem>
+        </Menu>
+
+        <StackPanel x:Name="GameModeContainer" VerticalAlignment="Center">
+            <Button x:Name="Singleplayer" Content="Singleplayer" Margin="5" HorizontalAlignment="Center" Width="203" Height="80" Click="GameMode_Click"/>
+            <Button x:Name="Multiplayer" Content="Multiplayer" Margin="5" HorizontalAlignment="Center" Width="203" Height="80" Click="GameMode_Click"/>
+        </StackPanel>
+
+        <Grid x:Name="GameGrid" Visibility="Hidden" IsEnabled="False" Margin="30" HorizontalAlignment="Left" Height="300" Width="300">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+
+            <Button x:Name="ZeroZero" Click="GridButton_OnClick"></Button>
+            <Button x:Name="ZeroOne" Grid.Column="1" Click="GridButton_OnClick"></Button>
+            <Button x:Name="ZeroTwo" Grid.Column="2" Click="GridButton_OnClick"></Button>
+            <Button x:Name="OneZero" Grid.Row="1" Click="GridButton_OnClick"></Button>
+            <Button x:Name="OneOne" Grid.Column="1" Grid.Row="1" Click="GridButton_OnClick"></Button>
+            <Button x:Name="OneTwo" Grid.Column="2" Grid.Row="1" Click="GridButton_OnClick"></Button>
+            <Button x:Name="TwoZero" Grid.Row="2" Click="GridButton_OnClick"></Button>
+            <Button x:Name="TwoOne" Grid.Column="1" Grid.Row="2" Click="GridButton_OnClick"></Button>
+            <Button x:Name="TwoTwo" Grid.Column="2" Grid.Row="2" Click="GridButton_OnClick"></Button>
+        </Grid>
+
+        <Canvas x:Name="MultiplayerGameInfoContainer" Visibility="Hidden">
+            <Button x:Name="LeaveGame" Content="LeaveGame" HorizontalAlignment="Center" Width="94" Height="31" Click="LeaveGame_Click" Canvas.Left="342" Canvas.Top="37"/>
+            <Rectangle x:Name="Client" Fill="White" Height="31" Canvas.Left="342" Stroke="Black" Canvas.Top="94" Width="94"/>
+            <Label Content="Your Color:" Canvas.Left="342" Canvas.Top="68" Width="94"/>
+            <Rectangle x:Name="Opponent" Fill="White" Height="31" Canvas.Left="342" Stroke="Black" Canvas.Top="151" Width="94"/>
+            <Label Content="Opponents:" Canvas.Left="342" Canvas.Top="125" Width="94"/>
+            <Label Content="Waiting for opponent to connect" HorizontalContentAlignment="Center" Canvas.Left="39" Canvas.Top="341" Width="296"/>
+        </Canvas>
+
+        <Canvas x:Name="ConnectContainer" Visibility="Hidden">
+            <Button x:Name="ConnectButton" Content="Connect" HorizontalAlignment="Left" VerticalAlignment="Top" Width="120" Height="22" Click="ConnectButton_Click" Canvas.Left="116" Canvas.Top="133"/>
+            <TextBox x:Name="InputIpAddress" HorizontalAlignment="Left" Height="24" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="120" Canvas.Left="116" Canvas.Top="76"/>
+            <TextBox x:Name="InputPortNumber" HorizontalAlignment="Left" Height="23" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="120" Canvas.Left="116" Canvas.Top="105"/>
+            <Label x:Name="LabelIpAddress" Content="Ip Address:" HorizontalAlignment="Left" VerticalAlignment="Top" Width="68" Height="24" Canvas.Left="43" Canvas.Top="76"/>
+            <Label x:Name="LabelPortNumber" Content="Port number:" HorizontalAlignment="Left" VerticalAlignment="Top" Width="78" Height="23" RenderTransformOrigin="-3.436,2.304" Canvas.Left="33" Canvas.Top="105"/>
+            <TextBlock x:Name="ConnectionText" HorizontalAlignment="Left" Margin="462,94,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top"/>
+        </Canvas>
+
+        <Canvas x:Name="GameMenuContainer" Margin="0,-10,0,10" Visibility="Hidden">
+            <Button x:Name="CreateNewGame"  Content="Create new game" HorizontalAlignment="Left" VerticalAlignment="Top" Width="101" Click="CreateNewGame_Click" Canvas.Left="42" Canvas.Top="128"/>
+            <ListBox x:Name="GameListBox" ItemsSource="{Binding}" HorizontalAlignment="Left" Height="160" VerticalAlignment="Top" Width="151" Canvas.Left="148" Canvas.Top="78">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <Button x:Name="JoinGame" Content="Join game" HorizontalAlignment="Left" VerticalAlignment="Top" Width="101" Click="JoinGame_Click" Canvas.Left="42" Canvas.Top="78"/>
+            <Button x:Name="RefreshButton" Content="refresh" HorizontalAlignment="Left" VerticalAlignment="Top" Width="101" Click="RefreshButton_Click" Canvas.Left="42" Canvas.Top="103"/>
+        </Canvas>
+    </Grid>
+</Window>
