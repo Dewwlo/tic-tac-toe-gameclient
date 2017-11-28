@@ -176,5 +176,10 @@ namespace Övningstenta
             MultiplayerGameInfoContainer.Visibility = Visibility.Hidden;
             _clientSocket.ClientSend(new Command { CommandTerm = "LEAVE", Data = _multiplayerGameId});
         }
+
+        private void StartGame_Click(object sender, RoutedEventArgs e)
+        {
+            _clientSocket.ClientSend(new Command { CommandTerm = "START", Data = _multiplayerGameId });
+        }
     }
 }
