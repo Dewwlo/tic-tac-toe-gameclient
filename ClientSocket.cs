@@ -6,18 +6,20 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using Newtonsoft.Json;
 
 namespace Övningstenta
 {
     public class ClientSocket
     {
+        MainWindow Form = Application.Current.Windows[0] as MainWindow;
         private readonly TcpClient _client = new TcpClient();
         private NetworkStream _stream;
         private readonly IPEndPoint _endPoint;
         private Task _activeGame;
         private static CancellationTokenSource _tokenSource;
-        public CancellationToken _ct;
+        public CancellationToken Ct;
 
         public ClientSocket(string address, string port, out bool success)
         {
@@ -59,16 +61,35 @@ namespace Övningstenta
         {
             while (true)
             {
-                if (_ct.IsCancellationRequested)
-                    _ct.ThrowIfCancellationRequested();
+                if (Ct.IsCancellationRequested)
+                    Ct.ThrowIfCancellationRequested();
 
                 var data = new byte[1024];
                 var recv = _stream.Read(data, 0, data.Length);
-                var temp = Encoding.ASCII.GetString(data, 0, recv);
-                if (ValidateJson(temp))
+                var cmdJson = Encoding.ASCII.GetString(data, 0, recv);
+
+                if (ValidateJson(cmdJson))
                 {
-                    
+                    var cmd = JsonConvert.DeserializeObject<Command>(cmdJson);
+                    ExecuteCommand(cmd.CommandTerm, cmd.Data);
                 }
+            }
+        }
+
+        private void ExecuteCommand(string command, dynamic data)
+        {
+            switch (command)
+            {
+                case "JOIN":
+                    Form.Content = "A player has joined your game.";
+                    Form.StartGame.IsEnabled = true;
+                    break;
+                case "START":
+                    Form.GameGrid.IsEnabled = true;
+                    Form.Content = "Game has started.";
+                    break;
+                case "LEAVE":
+                    break;
             }
         }
 
@@ -113,11 +134,11 @@ namespace Övningstenta
         private void CreateTask()
         {
             _tokenSource = new CancellationTokenSource();
-            _ct = _tokenSource.Token;
+            Ct = _tokenSource.Token;
 
             _activeGame = new Task(() =>
             {
-                _ct.ThrowIfCancellationRequested();
+                Ct.ThrowIfCancellationRequested();
                 ClientRecieve();
             }, _tokenSource.Token);
 

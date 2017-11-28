@@ -15,7 +15,6 @@ namespace Övningstenta
         private int _multiplayerGameId;
         private string _gameMode = "";
 
-
         public MainWindow()
         {
             InitializeComponent();
@@ -121,7 +120,6 @@ namespace Övningstenta
 
         private void CreateNewGame_Click(object sender, RoutedEventArgs e)
         {
-            
             _clientSocket.ClientSend(new Command { CommandTerm = "CREATE", Data = null });
             _multiplayerGameId = _clientSocket.ClientRecieveGameId();
 

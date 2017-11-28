@@ -43,13 +43,14 @@
             <Button x:Name="TwoTwo" Grid.Column="2" Grid.Row="2" Click="GridButton_OnClick"></Button>
         </Grid>
 
-        <Canvas x:Name="MultiplayerGameInfoContainer" Visibility="Hidden">
-            <Button x:Name="LeaveGame" Content="LeaveGame" HorizontalAlignment="Center" Width="94" Height="31" Click="LeaveGame_Click" Canvas.Left="342" Canvas.Top="37"/>
-            <Rectangle x:Name="Client" Fill="White" Height="31" Canvas.Left="342" Stroke="Black" Canvas.Top="94" Width="94"/>
-            <Label Content="Your Color:" Canvas.Left="342" Canvas.Top="68" Width="94"/>
-            <Rectangle x:Name="Opponent" Fill="White" Height="31" Canvas.Left="342" Stroke="Black" Canvas.Top="151" Width="94"/>
-            <Label Content="Opponents:" Canvas.Left="342" Canvas.Top="125" Width="94"/>
-            <Label Content="Waiting for opponent to connect" HorizontalContentAlignment="Center" Canvas.Left="39" Canvas.Top="341" Width="296"/>
+        <Canvas x:Name="MultiplayerGameInfoContainer">
+            <Button x:Name="StartGame" Content="Start game" IsEnabled="False" HorizontalAlignment="Center" Width="94" Height="31" Click="StartGame_Click" Canvas.Left="342" Canvas.Top="37"/>
+            <Button x:Name="LeaveGame" Content="Leave game" HorizontalAlignment="Center" Width="94" Height="31" Click="LeaveGame_Click" Canvas.Left="343" Canvas.Top="77"/>
+            <Rectangle x:Name="Client" Fill="White" Height="32" Canvas.Left="343" Stroke="Black" Canvas.Top="134" Width="94"/>
+            <Label Content="Your Color:" Canvas.Left="343" Canvas.Top="108" Width="94"/>
+            <Rectangle x:Name="Opponent" Fill="White" Height="31" Canvas.Left="343" Stroke="Black" Canvas.Top="191" Width="94"/>
+            <Label Content="Opponents:" Canvas.Left="343" Canvas.Top="165" Width="94"/>
+            <Label x:Name="GameStatusLabel" Content="Waiting for opponent to connect" HorizontalContentAlignment="Center" Canvas.Left="39" Canvas.Top="341" Width="296"/>
         </Canvas>
 
         <Canvas x:Name="ConnectContainer" Visibility="Hidden">
