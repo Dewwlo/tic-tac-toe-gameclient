@@ -7,12 +7,12 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="407.932" Width="464.345">
     <Grid>
-        <Menu Height="20" VerticalAlignment="Top">
+        <!--<Menu Height="20" VerticalAlignment="Top">
             <MenuItem Header="Game _menu">
                 <MenuItem Header="_New Game" InputGestureText="Ctrl+N" Click="NewGame_OnClick"/>
                 <MenuItem Header="_Close Game" Click="CloseGame_OnClick"/>
             </MenuItem>
-        </Menu>
+        </Menu>-->
 
         <StackPanel x:Name="GameModeContainer" VerticalAlignment="Center">
             <Button x:Name="Singleplayer" Content="Singleplayer" IsEnabled="False" Margin="5" HorizontalAlignment="Center" Width="203" Height="80" Click="GameMode_Click"/>

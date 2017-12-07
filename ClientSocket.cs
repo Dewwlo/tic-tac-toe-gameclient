@@ -99,6 +99,10 @@ namespace Övningstenta
                     if (bool.Parse(data))
                         JoinMultiplayerGame();
                     break;
+                case "SENDGAMESTATUS":
+                    InitGame(JsonConvert.DeserializeObject<GameStatus>(data));
+                    UpdateGame(JsonConvert.DeserializeObject<GameStatus>(data));
+                    break;
                 case "OPPONENTJOIN":
                     Form.Dispatcher.Invoke(() =>
                     {
@@ -148,18 +152,9 @@ namespace Övningstenta
             Form.Dispatcher.Invoke(() =>
             {
                 Form.GameGrid.IsEnabled = false;
-                //var result = MessageBox.Show($"Player {winner} won!!", "Tic tac toe", MessageBoxButton.OK); ;
-                MessageBox.Show(winner != "" ? $"Player {winner} won!!" : "Noone was able to win this game",
+                MessageBox.Show(winner != "" ? $"Player {winner} won!!" : "No winner this game.",
                     "Tic tac toe", MessageBoxButton.OK);
-                //switch (result)
-                //{
-                //    case MessageBoxResult.Yes:
 
-                //        break;
-                //    case MessageBoxResult.No:
-
-                //        break;
-                //}
             }, DispatcherPriority.ContextIdle);
         }
 

@@ -90,15 +90,18 @@ namespace Övningstenta
 
         private void ConnectButton_Click(object sender, RoutedEventArgs e)
         {
-            _clientSocket = new ClientSocket(InputIpAddress.Text, InputPortNumber.Text, out _contentLoaded);
-
-            ConnectionText.Visibility = Visibility.Visible;
-            ConnectionText.Text = _contentLoaded ? "You are now connected to server" : "Connection to server failed";
-            if (_contentLoaded)
+            if (InputIpAddress.Text != "" && InputPortNumber.Text != "")
             {
-                
-                GameMenuContainer.Visibility = Visibility.Visible;
-                ConnectContainer.Visibility = Visibility.Hidden;
+                _clientSocket = new ClientSocket(InputIpAddress.Text, InputPortNumber.Text, out _contentLoaded);
+
+                ConnectionText.Visibility = Visibility.Visible;
+                ConnectionText.Text = _contentLoaded ? "You are now connected to server" : "Connection to server failed";
+                if (_contentLoaded)
+                {
+
+                    GameMenuContainer.Visibility = Visibility.Visible;
+                    ConnectContainer.Visibility = Visibility.Hidden;
+                }
             }
         }
 
@@ -118,6 +121,7 @@ namespace Övningstenta
             if (selectedItem != null)
             {
                 _clientSocket.ClientSend($"JOIN;{GameListBox.SelectedItem}");
+                MultiplayerGameId = (int)GameListBox.SelectedItem;
             }
         }
 
