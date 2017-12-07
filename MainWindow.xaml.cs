@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Newtonsoft.Json;
 
 namespace Övningstenta
 {
@@ -11,44 +12,28 @@ namespace Övningstenta
     public partial class MainWindow : Window
     {
         private ClientSocket _clientSocket;
-        private List<int> _games = new List<int>();
-        private int _multiplayerGameId;
+        public static int MultiplayerGameId;
         private string _gameMode = "";
+        public static GameStatus GameStatus;
+        public static bool IsPlayerOne;
 
         public MainWindow()
         {
             InitializeComponent();
         }
 
-        private int Counter { get; set; }
-
         private void GridButton_OnClick(object sender, RoutedEventArgs e)
         {
             var button = (Button) sender;
+            if (_clientSocket.GetPlayerInfo().PlayerSign != GameStatus.Turn) return;
+            var result = UpdateScoreGrid(button.Name, _clientSocket.GetPlayerInfo().PlayerSign);
+            if (!result) return;
 
-            if (button == null || Counter >= 9) return;
-            button.Content = Counter % 2 != 0 ? "X" : "O";
-            button.FontSize = 50;
-            button.Foreground = Brushes.Red;
-            Counter += 1;
-
-            if (CalculateVicotory())
-            {
-                var result = MessageBox.Show($"Player {button.Content} won!!", "Tic tac toe", MessageBoxButton.YesNo); ;
-                switch (result)
-                {
-                    case MessageBoxResult.Yes:
-                        ResetGame();
-                        GameGrid.IsEnabled = true;
-                        break;
-                    case MessageBoxResult.No:
-                        ResetGame();
-                        GameGrid.IsEnabled = false;
-                        break;
-                }
-            }
+            _clientSocket.UpdateGrid(GameStatus.Grid);
+            GameStatus.Turn = _clientSocket.GetOpponentInfo().PlayerSign;
+            _clientSocket.ClientSend($"TURN;{JsonConvert.SerializeObject(GameStatus)}");
         }
-
+        
         private void NewGame_OnClick(object sender, RoutedEventArgs e)
         {
             ResetGame();
@@ -63,6 +48,7 @@ namespace Övningstenta
 
         private void ResetGame()
         {
+            GameStatus = null;
             ZeroZero.Content = null;
             ZeroOne.Content = null;
             ZeroTwo.Content = null;
@@ -72,30 +58,35 @@ namespace Övningstenta
             TwoZero.Content = null;
             TwoOne.Content = null;
             TwoTwo.Content = null;
-
-            Counter = 0;
         }
 
-        private bool CalculateVicotory()
+        public bool UpdateScoreGrid(string buttonName, string playerSign)
         {
-            if (Equals(ZeroZero.Content, ZeroOne.Content) && Equals(ZeroZero.Content, ZeroTwo.Content) && ZeroZero.Content != null)
-                return true;
-            if (Equals(ZeroZero.Content, OneOne.Content) && Equals(ZeroZero.Content, TwoTwo.Content) && ZeroZero.Content != null)
-                return true;
-            if (Equals(ZeroZero.Content, ZeroOne.Content) && Equals(ZeroZero.Content, ZeroTwo.Content) && ZeroZero.Content != null)
-                return true;
-            if (Equals(OneZero.Content, OneOne.Content) && Equals(OneZero.Content, OneTwo.Content) && OneZero.Content != null)
-                return true;
-            if (Equals(TwoZero.Content, TwoOne.Content) && Equals(TwoZero.Content, TwoTwo.Content) && TwoZero.Content != null)
-                return true;
-            if (Equals(ZeroOne.Content, OneOne.Content) && Equals(ZeroOne.Content, TwoOne.Content) && ZeroOne.Content != null)
-                return true;
-            if (Equals(ZeroTwo.Content, OneTwo.Content) && Equals(ZeroTwo.Content, TwoTwo.Content) && ZeroTwo.Content != null)
-                return true;
-            if (Equals(ZeroTwo.Content, OneOne.Content) && Equals(ZeroTwo.Content, TwoZero.Content) && ZeroTwo.Content != null)
-                return true;
-            return false;
+            var result = false;
+
+            var index = GridIndexDictList[buttonName].Split(',');
+
+            if (GameStatus.Grid[int.Parse(index[0]), int.Parse(index[1])] == null)
+            {
+                GameStatus.Grid[int.Parse(index[0]), int.Parse(index[1])] = playerSign;
+                result = true;
+            }
+        
+            return result;
         }
+
+        public static Dictionary<string, string> GridIndexDictList = new Dictionary<string, string>
+        {
+            {"ZeroZero", "0,0"},
+            {"ZeroOne", "0,1"},
+            {"ZeroTwo", "0,2"},
+            {"OneZero", "1,0"},
+            {"OneOne", "1,1"},
+            {"OneTwo", "1,2"},
+            {"TwoZero", "2,0"},
+            {"TwoOne", "2,1"},
+            {"TwoTwo", "2,2"},
+        };
 
         private void ConnectButton_Click(object sender, RoutedEventArgs e)
         {
@@ -114,23 +105,12 @@ namespace Övningstenta
 
         private void RefreshButton_Click(object sender, RoutedEventArgs e)
         {
-            _clientSocket.ClientSend(new Command { CommandTerm = "GETGAMES", Data = null });
-            DataContext = _clientSocket.ClientRecieveGames();
+            _clientSocket.ClientSend("GETGAMES;");
         }
 
         private void CreateNewGame_Click(object sender, RoutedEventArgs e)
         {
-            _clientSocket.ClientSend(new Command { CommandTerm = "CREATE", Data = null });
-            _multiplayerGameId = _clientSocket.ClientRecieveGameId();
-
-            if (_multiplayerGameId != 0)
-            {
-                GameMenuContainer.Visibility = Visibility.Hidden;
-                GameGrid.Visibility = Visibility.Visible;
-                MultiplayerGameInfoContainer.Visibility = Visibility.Visible;
-                Client.Fill = Brushes.Red;
-                Opponent.Fill = Brushes.Blue;
-            }
+            _clientSocket.ClientSend("CREATE;");
         }
 
         private void JoinGame_Click(object sender, RoutedEventArgs e)
@@ -138,16 +118,7 @@ namespace Övningstenta
             var selectedItem = GameListBox.SelectedItem;
             if (selectedItem != null)
             {
-                _clientSocket.ClientSend(new Command { CommandTerm = "JOIN", Data = GameListBox.SelectedItem });
-                var response = _clientSocket.JoinGameSucceeded();
-                if (response)
-                {
-                    GameGrid.Visibility = Visibility.Visible;
-                    GameMenuContainer.Visibility = Visibility.Hidden;
-                    MultiplayerGameInfoContainer.Visibility = Visibility.Visible;
-                    Client.Fill = Brushes.Blue;
-                    Opponent.Fill = Brushes.Red;
-                }
+                _clientSocket.ClientSend($"JOIN;{GameListBox.SelectedItem}");
             }
         }
 
@@ -174,12 +145,13 @@ namespace Övningstenta
             GameMenuContainer.Visibility = Visibility.Visible;
             GameGrid.Visibility = Visibility.Hidden;
             MultiplayerGameInfoContainer.Visibility = Visibility.Hidden;
-            _clientSocket.ClientSend(new Command { CommandTerm = "LEAVE", Data = _multiplayerGameId});
+            ResetGame();
+            _clientSocket.ClientSend($"LEAVE;{MultiplayerGameId}");
         }
 
         private void StartGame_Click(object sender, RoutedEventArgs e)
         {
-            _clientSocket.ClientSend(new Command { CommandTerm = "START", Data = _multiplayerGameId });
+            _clientSocket.ClientSend($"START;{MultiplayerGameId}");
         }
     }
 }

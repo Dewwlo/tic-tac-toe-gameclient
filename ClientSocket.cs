@@ -7,6 +7,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Threading;
 using Newtonsoft.Json;
 
 namespace Övningstenta
@@ -17,7 +20,6 @@ namespace Övningstenta
         private readonly TcpClient _client = new TcpClient();
         private NetworkStream _stream;
         private readonly IPEndPoint _endPoint;
-        private Task _activeGame;
         private static CancellationTokenSource _tokenSource;
         public CancellationToken Ct;
 
@@ -33,7 +35,7 @@ namespace Övningstenta
             {
                 _client.Connect(_endPoint);
                 _stream = _client.GetStream();
-
+                new Task(ClientRecieve).Start();
                 return true;
             }
             catch (Exception)
@@ -47,14 +49,13 @@ namespace Övningstenta
             return new IPEndPoint(IPAddress.Parse(address), Int32.Parse(port));
         }
 
-        public void ClientSend(Command cmd)
+        public void ClientSend(string data)
         {
-            var bytesToSend = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(cmd));
+            var bytesToSend = Encoding.UTF8.GetBytes(data);
             _stream.Write(bytesToSend, 0, bytesToSend.Length);
-            _stream.Flush();
-            if (cmd.CommandTerm == "LEAVE")
+            if (data == "LEAVE;")
                 _tokenSource.Cancel();
-                
+
         }
 
         public void ClientRecieve()
@@ -65,96 +66,165 @@ namespace Övningstenta
                     Ct.ThrowIfCancellationRequested();
 
                 var data = new byte[1024];
-                var recv = _stream.Read(data, 0, data.Length);
-                var cmdJson = Encoding.ASCII.GetString(data, 0, recv);
+                var recv = 0;
 
-                if (ValidateJson(cmdJson))
+                try
                 {
-                    var cmd = JsonConvert.DeserializeObject<Command>(cmdJson);
-                    ExecuteCommand(cmd.CommandTerm, cmd.Data);
+                    recv = _stream.Read(data, 0, data.Length);
                 }
+                catch (Exception)
+                {
+                    break;
+                }
+
+                if (recv == 0) break;
+
+                var receivedData = Encoding.UTF8.GetString(data, 0, recv).Split(';');
+                ParseCommand(receivedData[0], receivedData[1]);
             }
         }
 
-        private void ExecuteCommand(string command, dynamic data)
+        private void ParseCommand(string cmd, string data)
         {
-            switch (command)
+            switch (cmd)
             {
+                case "GETGAMES":
+                    Form.Dispatcher.Invoke(() => { Form.DataContext = JsonConvert.DeserializeObject<List<int>>(data); }, DispatcherPriority.ContextIdle);
+                    break;
+                case "CREATE":
+                    MainWindow.MultiplayerGameId = JsonConvert.DeserializeObject<int>(data);
+                    CreateMultiplayerGame();
+                    break;
                 case "JOIN":
-                    Form.Content = "A player has joined your game.";
-                    Form.StartGame.IsEnabled = true;
+                    if (bool.Parse(data))
+                        JoinMultiplayerGame();
+                    break;
+                case "OPPONENTJOIN":
+                    Form.Dispatcher.Invoke(() =>
+                    {
+                        Form.GameStatusLabel.Content = "A player has joined your game.";
+                        Form.StartGame.IsEnabled = true;
+                    }, DispatcherPriority.ContextIdle);
                     break;
                 case "START":
-                    Form.GameGrid.IsEnabled = true;
-                    Form.Content = "Game has started.";
+                    InitGame(JsonConvert.DeserializeObject<GameStatus>(data));
+                    break;
+                case "TURN":
+                    UpdateGame(JsonConvert.DeserializeObject<GameStatus>(data));
+                    break;
+                case "GAMEOVER":
+                    AnnounceWinner(data);
                     break;
                 case "LEAVE":
                     break;
             }
         }
 
-        public List<int> ClientRecieveGames()
+        private void InitGame(GameStatus gameStatus)
         {
-            var data = new byte[1024];
-            var recv = _stream.Read(data, 0, data.Length);
-            var games = Encoding.ASCII.GetString(data, 0, recv);
-            return !ValidateJson(games) ? new List<int>() : JsonConvert.DeserializeObject<List<int>>(games);
+            Form.Dispatcher.Invoke(() =>
+            {
+                MainWindow.GameStatus = gameStatus;
+                Form.GameGrid.IsEnabled = GetPlayerInfo().PlayerSign == gameStatus.Turn;
+                Form.GameStatusLabel.Content = "Game has started.";
+                Form.StartGame.IsEnabled = false;
+                Form.Client.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString(GetPlayerInfo().PlayerColor));
+                Form.Opponent.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString(GetOpponentInfo().PlayerColor));
+            }, DispatcherPriority.ContextIdle);
         }
 
-        public int ClientRecieveGameId()
+        private void UpdateGame(GameStatus gameStatus)
         {
-            var data = new byte[1024];
-            var recv = _stream.Read(data, 0, data.Length);
-            var game = Encoding.ASCII.GetString(data, 0, recv);
-            var gameId = !ValidateJson(game) ? 0 : JsonConvert.DeserializeObject<int>(game);
-            if (gameId != 0)
+            Form.Dispatcher.Invoke(() =>
             {
-                CreateTask();
-                _activeGame.Start();
-            }
-
-            return gameId;
+                MainWindow.GameStatus = gameStatus;
+                Form.GameGrid.IsEnabled = GetPlayerInfo().PlayerSign == gameStatus.Turn;
+                UpdateGrid(MainWindow.GameStatus.Grid);
+            }, DispatcherPriority.ContextIdle);
         }
 
-        public bool JoinGameSucceeded()
+        private void AnnounceWinner(string winner)
         {
-            var data = new byte[1024];
-            var recv = _stream.Read(data, 0, data.Length);
-            var game = Encoding.ASCII.GetString(data, 0, recv);
-            var succeeded = ValidateJson(game) && JsonConvert.DeserializeObject<bool>(game);
-            if (succeeded)
+            Form.Dispatcher.Invoke(() =>
             {
-                CreateTask();
-                _activeGame.Start();
-            }
+                Form.GameGrid.IsEnabled = false;
+                var result = MessageBox.Show($"Player {winner} won!!", "Tic tac toe", MessageBoxButton.YesNo); ;
+                switch (result)
+                {
+                    case MessageBoxResult.Yes:
 
-            return succeeded;
+                        break;
+                    case MessageBoxResult.No:
+
+                        break;
+                }
+            }, DispatcherPriority.ContextIdle);
         }
 
-        private void CreateTask()
+        public void UpdateGrid(string[,] grid)
         {
-            _tokenSource = new CancellationTokenSource();
-            Ct = _tokenSource.Token;
-
-            _activeGame = new Task(() =>
+            for (int vertical = 0; vertical < grid.GetLength(0); vertical++)
             {
-                Ct.ThrowIfCancellationRequested();
-                ClientRecieve();
-            }, _tokenSource.Token);
-
-        }
-
-        private static bool ValidateJson(string json)
-        {
-            try
-            {
-                var obj = JsonConvert.DeserializeObject<dynamic>(json);
-                return true;
-            }
-            catch // not valid
-            {
-                return false;
+                for (int horizontal = 0; horizontal < grid.GetLength(1); horizontal++)
+                {
+                    if (grid[vertical, horizontal] != null)
+                    {
+                        var button = (Button)Form.FindName(ButtonDictList[$"{vertical},{horizontal}"]);
+                        if (button == null) return;
+                        button.Content = grid[vertical, horizontal];
+                        button.Foreground = grid[vertical, horizontal] == GetPlayerInfo().PlayerSign ? Form.Client.Fill : Form.Opponent.Fill;
+                        button.FontSize = 50;
+                    }
+                }
             }
         }
+
+        public PlayerInfo GetPlayerInfo()
+        {
+            return MainWindow.IsPlayerOne ? MainWindow.GameStatus.PlayerOne : MainWindow.GameStatus.PlayerTwo;
+        }
+        public PlayerInfo GetOpponentInfo()
+        {
+            return MainWindow.IsPlayerOne ? MainWindow.GameStatus.PlayerTwo : MainWindow.GameStatus.PlayerOne;
+        }
+
+        public void CreateMultiplayerGame()
+        {
+            if (MainWindow.MultiplayerGameId != 0)
+            {
+                Form.Dispatcher.Invoke(() =>
+                {
+                    Form.GameMenuContainer.Visibility = Visibility.Hidden;
+                    Form.GameGrid.Visibility = Visibility.Visible;
+                    Form.MultiplayerGameInfoContainer.Visibility = Visibility.Visible;
+                    MainWindow.IsPlayerOne = true;
+                }, DispatcherPriority.ContextIdle);
+            }
+        }
+
+        public void JoinMultiplayerGame()
+        {
+            Form.Dispatcher.Invoke(() =>
+            {
+                Form.GameGrid.Visibility = Visibility.Visible;
+                Form.GameMenuContainer.Visibility = Visibility.Hidden;
+                Form.MultiplayerGameInfoContainer.Visibility = Visibility.Visible;
+                MainWindow.IsPlayerOne = false;
+                Form.GameStatusLabel.Content = "You are now connected to a game.";
+            }, DispatcherPriority.ContextIdle);
+        }
+
+        public static Dictionary<string, string> ButtonDictList = new Dictionary<string, string>
+        {
+            {"0,0", "ZeroZero"},
+            {"0,1", "ZeroOne"},
+            {"0,2", "ZeroTwo"},
+            {"1,0", "OneZero"},
+            {"1,1", "OneOne"},
+            {"1,2", "OneTwo"},
+            {"2,0", "TwoZero"},
+            {"2,1", "TwoOne"},
+            {"2,2", "TwoTwo"},
+        };
     }
 }

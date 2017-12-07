@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Övningstenta
 {
-    public class Command
+    public class PlayerInfo
     {
-        public string CommandTerm { get; set; }
-        public dynamic Data { get; set; }
+        public string PlayerColor { get; set; }
+        public string PlayerSign { get; set; }
     }
 }

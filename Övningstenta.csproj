@@ -66,13 +66,19 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ClientSocket.cs" />
-    <Compile Include="Command.cs" />
+    <Compile Include="Game.cs" />
+    <Compile Include="GameStatus.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Resources\ResourceGameClient.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PlayerInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

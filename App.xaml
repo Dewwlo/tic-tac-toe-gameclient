@@ -4,6 +4,6 @@
              xmlns:local="clr-namespace:Övningstenta"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+         <ResourceDictionary Source="Resources/ResourceGameClient.xaml"></ResourceDictionary>
     </Application.Resources>
 </Application>
