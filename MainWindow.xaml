@@ -15,7 +15,7 @@
         </Menu>
 
         <StackPanel x:Name="GameModeContainer" VerticalAlignment="Center">
-            <Button x:Name="Singleplayer" Content="Singleplayer" Margin="5" HorizontalAlignment="Center" Width="203" Height="80" Click="GameMode_Click"/>
+            <Button x:Name="Singleplayer" Content="Singleplayer" IsEnabled="False" Margin="5" HorizontalAlignment="Center" Width="203" Height="80" Click="GameMode_Click"/>
             <Button x:Name="Multiplayer" Content="Multiplayer" Margin="5" HorizontalAlignment="Center" Width="203" Height="80" Click="GameMode_Click"/>
         </StackPanel>
 

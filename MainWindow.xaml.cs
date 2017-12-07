@@ -90,8 +90,7 @@ namespace Övningstenta
 
         private void ConnectButton_Click(object sender, RoutedEventArgs e)
         {
-            //_clientSocket = new ClientSocket(InputIpAddress.Text, InputPortNumber.Text, out _contentLoaded);
-            _clientSocket = new ClientSocket("192.168.1.14", "8081", out _contentLoaded);
+            _clientSocket = new ClientSocket(InputIpAddress.Text, InputPortNumber.Text, out _contentLoaded);
 
             ConnectionText.Visibility = Visibility.Visible;
             ConnectionText.Text = _contentLoaded ? "You are now connected to server" : "Connection to server failed";

@@ -14,5 +14,6 @@ namespace Övningstenta
         public string Turn { get; set; }
         public PlayerInfo PlayerOne { get; set; }
         public PlayerInfo PlayerTwo { get; set; }
+        public bool IsStarted { get; set; }
     }
 }

@@ -148,16 +148,18 @@ namespace Övningstenta
             Form.Dispatcher.Invoke(() =>
             {
                 Form.GameGrid.IsEnabled = false;
-                var result = MessageBox.Show($"Player {winner} won!!", "Tic tac toe", MessageBoxButton.YesNo); ;
-                switch (result)
-                {
-                    case MessageBoxResult.Yes:
+                //var result = MessageBox.Show($"Player {winner} won!!", "Tic tac toe", MessageBoxButton.OK); ;
+                MessageBox.Show(winner != "" ? $"Player {winner} won!!" : "Noone was able to win this game",
+                    "Tic tac toe", MessageBoxButton.OK);
+                //switch (result)
+                //{
+                //    case MessageBoxResult.Yes:
 
-                        break;
-                    case MessageBoxResult.No:
+                //        break;
+                //    case MessageBoxResult.No:
 
-                        break;
-                }
+                //        break;
+                //}
             }, DispatcherPriority.ContextIdle);
         }
 
